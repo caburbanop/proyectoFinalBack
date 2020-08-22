@@ -16,11 +16,13 @@ class DefaultController extends AbstractController
     public function index(Request $request) {
         $data = array(
             'estado' => 'Exito',
-            'mensaje' => 'Video procesado correctamente correctamente.',
+            'mensaje' => 'Video procesado correctamente.',
             'nombre' => ''
         );
         try {
             $json = $request->request->get('json');
+            $datosEnvio = json_decode($json);
+            $nombreVideo = $datosEnvio->video[0];
             //print('Llego al método');
         }catch (\Exception $e) {
             $data['estado'] = "Error";
