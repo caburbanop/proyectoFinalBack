@@ -16,7 +16,7 @@ class DefaultController extends AbstractController
     public function index(Request $request) {
         $data = array(
             'estado' => 'Exito',
-            'mensaje' => 'Video procesado correctamente.',
+            'mensaje' => 'Video procesado correctamente en el servidor.',
             'nombre' => ''
         );
         try {
