@@ -17,12 +17,13 @@ class DefaultController extends AbstractController
         $data = array(
             'estado' => 'Exito',
             'mensaje' => 'Video procesado correctamente en el servidor.',
-            'nombre' => ''
+            'proceso' => ''
         );
         try {
             $json = $request->request->get('json');
             $datosEnvio = json_decode($json);
             $nombreVideo = $datosEnvio->video[0];
+            $data['proceso'] = "850";
             //print('Llego al método');
         }catch (\Exception $e) {
             $data['estado'] = "Error";
@@ -37,8 +38,7 @@ class DefaultController extends AbstractController
     public function uploadAction(Request $request){
         $data = array(
             'estado' => 'Exito',
-            'mensaje' => 'Archivo cargado correctamente.',
-            'nombre' => ''
+            'mensaje' => 'Archivo cargado correctamente.'
         );
         try {
             $file = $request->files->get("adjuntos"); 
@@ -48,6 +48,26 @@ class DefaultController extends AbstractController
             $file->move($carpeta, $nombre);
             $data['nombre'] = $nombre;
         } catch (\Exception $e) {
+            $data['estado'] = "Error";
+            $data['mensaje'] = "".$e->getMessage();
+        }
+        return new JsonResponse($data);
+    }
+
+    /**
+     * @Route("/consultarInfo", name="consultarInfo")
+     */
+    public function consultarInfo(Request $request) {
+        $data = array(
+            'estado' => 'Exito',
+            'mensaje' => 'Información retornada.'
+        );
+        try {
+            $json = $request->request->get('json');
+            $datosEnvio = json_decode($json);
+            $tipo = $datosEnvio->tipo;
+            //print('Llego al método');
+        }catch (\Exception $e) {
             $data['estado'] = "Error";
             $data['mensaje'] = "".$e->getMessage();
         }
