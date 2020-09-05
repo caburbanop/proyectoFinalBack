@@ -1,0 +1,2 @@
+ingresar al ambiente reconocimiento_facial_json
+ejecutar python reconocimiento_grafica.py

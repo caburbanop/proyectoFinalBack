@@ -1,0 +1,19 @@
+Activar entorno virtual con conda
+-> conda activate "nombre entorno"
+Desactivar entorno virtual con conda
+-> conda deactivate
+Crear entornos virtuales con conda
+-> conda create --name "nombre_entorno"
+Instalar paquetes
+-> pip install "nombre_paquete"
+-> conda install "nombre_paquete"
+Listar los paquetes instalados en el entorno
+-> conda list
+Listar los entornos creados
+-> conda info -e
+Ejecutar jupyter 
+-> jupyter notebook
+Instalar desde un archivo txt 
+-> pip install -r requirements.txt
+Eliminar entorno virtual con conda
+conda env remove -n "nombre entorno"
