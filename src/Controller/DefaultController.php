@@ -20,26 +20,52 @@ class DefaultController extends AbstractController
         $data = array(
             'estado' => 'Exito',
             'mensaje' => 'Video procesado correctamente en el servidor.',
-            'proceso' => ''
+            'proceso' => '',
+            'tipo' => ''
         );
         try {
             $json = $request->request->get('json');
             $datosEnvio = json_decode($json);
             $nombreVideo = "/tmp/upload/".$datosEnvio->video[0];
-            // Cambiamos de directorio
-            if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
-                $comando = "python reconocimiento.py ".$nombreVideo.' > /dev/null 2>&1 & echo $!';
-                exec($comando, $output, $return_var);
-                $pid = (int)$output[0];
+            $tipo = $datosEnvio->tipo;
+            $data['tipo'] = $tipo;
+            if ($tipo == "facial") {
+                // Cambiamos de directorio
+                if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
+                    $comando = "python reconocimiento.py ".$nombreVideo.' > /dev/null 2>&1 & echo $!';
+                    exec($comando, $output, $return_var);
+                    $pid = (int)$output[0];
 
-                // Ejecutarlo por proceso
-                //$comando = "python reconocimiento.py ".$nombreVideo;
-                //$process = new Process(exec($comando, $output, $return_var));
-                //$process = new Process($comando);
-                //$process->start();
-                //$pid = $process->getPid();
+                    // Ejecutarlo por proceso
+                    //$comando = "python reconocimiento.py ".$nombreVideo;
+                    //$process = new Process(exec($comando, $output, $return_var));
+                    //$process = new Process($comando);
+                    //$process->start();
+                    //$pid = $process->getPid();
 
-                $data['proceso'] = $pid;
+                    $data['proceso'] = $pid;
+                }
+            } elseif ($tipo == "habla") {
+                // Cambiamos de directorio
+                if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
+                    $comando = "python extraer_audio.py video_nodal.mp4";
+                    exec($comando, $output, $return_var);
+                    $ficheros = scandir("audios-generados");
+                    //sort($ficheros);
+                    //$dir = opendir("audios-generados");
+                    unlink("emociones.txt");
+                    foreach ($ficheros as $fichero) {
+                        if( $fichero != "." && $fichero != ".."){
+                            $dividir = explode("-", $fichero);
+                            $nombre = explode(".", $dividir[1]);
+                            $comando = "python OpenVokaWavMean-linux64.py audios-generados/".$fichero.' '.$nombre[0].' > /dev/null 2>&1 & echo $!';
+                            exec($comando, $output1, $return_var);                            
+                        }
+                    }
+                    $pid = (int)$output1[0];
+                    $data['proceso'] = $pid;
+                    //$data['proceso'] = 0;
+                }
             }
         }catch (\Exception $e) {
             $data['estado'] = "Error";
@@ -77,24 +103,39 @@ class DefaultController extends AbstractController
         $data = array(
             'estado' => 'Exito',
             'mensaje' => 'Información retornada.',
-            'datos' => ''
+            'datos' => '',
+            'tipo' => ''
         );
         try {
             $json = $request->request->get('json');
             $datosEnvio = json_decode($json);
             $tipo = $datosEnvio->tipo;
             $proceso = $datosEnvio->proceso;
+            $data['tipo'] = $tipo;
 
             // Obtenemos el arreglo generado
-            if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
-                $file = "emociones.txt";
-                $fp = fopen($file, "r");
-                $contenido = fread($fp, filesize($file));
-                $data['datos'] = $contenido;
-                /*while (!feof($fp)) {
-                    $linea = fgets($fp);
-                } */               
-            }            
+            if ($tipo == "facial") {                
+                if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
+                    $file = "emociones.txt";
+                    $fp = fopen($file, "r");
+                    $contenido = fread($fp, filesize($file));
+                    $data['datos'] = $contenido;
+                    /*while (!feof($fp)) {
+                        $linea = fgets($fp);
+                    } */               
+                }
+            } elseif ($tipo == "habla") {
+                // Cambiamos de directorio
+                if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
+                    $file = "emociones.txt";
+                    $fp = fopen($file, "r");
+                    $contenido = fread($fp, filesize($file));
+                    $datosArchivo = explode("\n", $contenido);
+                    sort($datosArchivo);
+                    $contenido = implode("\n", $datosArchivo);
+                    $data['datos'] = $contenido;
+                }
+            }
 
             //$comando = "ps -p ".$proceso." -o comm=";
             //$result = exec($comando);

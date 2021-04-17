@@ -1,0 +1,1 @@
+python OpenVokaWavMean-linux64.py voz9.wav
