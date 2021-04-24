@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Validator\Constraints\Length;
 
 class DefaultController extends AbstractController
 {
@@ -30,48 +31,59 @@ class DefaultController extends AbstractController
             $tipo = $datosEnvio->tipo;
             $data['tipo'] = $tipo;
             if ($tipo == "facial") {
-                // Cambiamos de directorio
-                if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
-                    $comando = "python reconocimiento.py ".$nombreVideo.' > /dev/null 2>&1 & echo $!';
-                    exec($comando, $output, $return_var);
-                    $pid = (int)$output[0];
-
-                    // Ejecutarlo por proceso
-                    //$comando = "python reconocimiento.py ".$nombreVideo;
-                    //$process = new Process(exec($comando, $output, $return_var));
-                    //$process = new Process($comando);
-                    //$process->start();
-                    //$pid = $process->getPid();
-
-                    $data['proceso'] = $pid;
-                }
+                $data['proceso'] = $this->reconocimientoFacial($nombreVideo);
             } elseif ($tipo == "habla") {
-                // Cambiamos de directorio
-                if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
-                    $comando = "python extraer_audio.py video_nodal.mp4";
-                    exec($comando, $output, $return_var);
-                    $ficheros = scandir("audios-generados");
-                    //sort($ficheros);
-                    //$dir = opendir("audios-generados");
-                    unlink("emociones.txt");
-                    foreach ($ficheros as $fichero) {
-                        if( $fichero != "." && $fichero != ".."){
-                            $dividir = explode("-", $fichero);
-                            $nombre = explode(".", $dividir[1]);
-                            $comando = "python OpenVokaWavMean-linux64.py audios-generados/".$fichero.' '.$nombre[0].' > /dev/null 2>&1 & echo $!';
-                            exec($comando, $output1, $return_var);                            
-                        }
-                    }
-                    $pid = (int)$output1[0];
-                    $data['proceso'] = $pid;
-                    //$data['proceso'] = 0;
-                }
+                $data['proceso'] = $this->reconocimientoHabla($nombreVideo);
+            } elseif ($tipo == "facial-habla") {
+                $data['proceso'] = $this->reconocimientoFacial($nombreVideo);
+                $data['proceso'] = $this->reconocimientoHabla($nombreVideo);
             }
         }catch (\Exception $e) {
             $data['estado'] = "Error";
             $data['mensaje'] = "".$e->getMessage();
         }
         return new JsonResponse($data);
+    }
+
+    function reconocimientoFacial($nombreVideo){
+        // Cambiamos de directorio
+        if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
+            $comando = "python reconocimiento.py ".$nombreVideo.' > /dev/null 2>&1 & echo $!';
+            exec($comando, $output, $return_var);
+            $pid = (int)$output[0];
+
+            // Ejecutarlo por proceso
+            //$comando = "python reconocimiento.py ".$nombreVideo;
+            //$process = new Process(exec($comando, $output, $return_var));
+            //$process = new Process($comando);
+            //$process->start();
+            //$pid = $process->getPid();
+
+            return $pid;
+        }
+    }
+
+    function reconocimientoHabla($nombreVideo){
+        // Cambiamos de directorio
+        if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
+            $comando = "python extraer_audio.py video_nodal.mp4";
+            exec($comando, $output, $return_var);
+            $ficheros = scandir("audios-generados");
+            //sort($ficheros);
+            //$dir = opendir("audios-generados");
+            unlink("emociones.txt");
+            foreach ($ficheros as $fichero) {
+                if( $fichero != "." && $fichero != ".."){
+                    $dividir = explode("-", $fichero);
+                    $nombre = explode(".", $dividir[1]);
+                    $comando = "python OpenVokaWavMean-linux64.py audios-generados/".$fichero.' '.$nombre[0].' > /dev/null 2>&1 & echo $!';
+                    exec($comando, $output1, $return_var);                            
+                }
+            }
+            $pid = (int)$output1[0];
+            return $pid;
+            //$data['proceso'] = 0;
+        }
     }
 
     /**
@@ -115,26 +127,42 @@ class DefaultController extends AbstractController
 
             // Obtenemos el arreglo generado
             if ($tipo == "facial") {                
-                if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
-                    $file = "emociones.txt";
-                    $fp = fopen($file, "r");
-                    $contenido = fread($fp, filesize($file));
-                    $data['datos'] = $contenido;
-                    /*while (!feof($fp)) {
-                        $linea = fgets($fp);
-                    } */               
-                }
+                $data['datos'] = $this->extraerFacial();
             } elseif ($tipo == "habla") {
-                // Cambiamos de directorio
-                if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
-                    $file = "emociones.txt";
-                    $fp = fopen($file, "r");
-                    $contenido = fread($fp, filesize($file));
-                    $datosArchivo = explode("\n", $contenido);
-                    sort($datosArchivo);
-                    $contenido = implode("\n", $datosArchivo);
-                    $data['datos'] = $contenido;
+                $data['datos'] = $this->extraerHabla();
+            } elseif ($tipo == "facial-habla") {
+                // Extraemos información de facial
+                $contenidoFacial = $this->extraerFacial();
+                // Extraemos información de habla
+                $contenidoHabla = $this->extraerHabla();
+
+                // Validamos la información 
+                $arregloFacial = explode("\n", $contenidoFacial);
+                //unset($arregloFacial[count($arregloFacial)-1]);
+                $arregloHabla = explode("\n", $contenidoHabla);
+                //unset($arregloHabla[0]);
+                $contenidoFinal = "";
+
+                for ($i=0; $i<count($arregloFacial); $i++){
+                    if ($arregloFacial[$i] != "" && $arregloHabla[$i+1] != "") {
+                        $valuesFacial = explode(",", $arregloFacial[$i]);
+                        $copyValuesFacial = $valuesFacial;
+                        $valuesHabla = explode(",", $arregloHabla[$i+1]);
+                        $copyValuesHabla = $valuesHabla;
+                        unset($copyValuesFacial[0]);
+                        unset($copyValuesHabla[0]);
+                        $maximoFacial = max($copyValuesFacial);
+                        $maximoHabla = max($copyValuesHabla);
+
+                        // Validamos el valor mayor
+                        if ($maximoFacial > $maximoHabla){
+                            $contenidoFinal = $contenidoFinal.$arregloFacial[$i]."\n";
+                        } else {
+                            $contenidoFinal = $contenidoFinal.$arregloHabla[$i+1]."\n";
+                        }
+                    }                    
                 }
+                $data['datos'] = $contenidoFinal;
             }
 
             //$comando = "ps -p ".$proceso." -o comm=";
@@ -146,6 +174,31 @@ class DefaultController extends AbstractController
             $data['mensaje'] = "".$e->getMessage();
         }
         return new JsonResponse($data);
+    }
+
+    function extraerFacial(){
+        if (chdir("/Aplicaciones/projectFinal/public/reconocimiento_grafica")) {
+            $file = "emociones.txt";
+            $fp = fopen($file, "r");
+            $contenido = fread($fp, filesize($file));
+            return $contenido;
+            /*while (!feof($fp)) {
+                $linea = fgets($fp);
+            } */               
+        }
+    }
+
+    function extraerHabla(){
+        // Cambiamos de directorio
+        if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
+            $file = "emociones.txt";
+            $fp = fopen($file, "r");
+            $contenido = fread($fp, filesize($file));
+            $datosArchivo = explode("\n", $contenido);
+            sort($datosArchivo);
+            $contenido = implode("\n", $datosArchivo);
+            return $contenido;
+        }
     }
 
     function isRunning($pid){

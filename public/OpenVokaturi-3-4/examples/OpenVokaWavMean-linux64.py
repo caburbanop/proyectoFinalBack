@@ -53,7 +53,7 @@ voice.extract(quality, emotionProbabilities)
 if quality.valid:
     print ("Escribiendo")
     f = open('emociones.txt', 'a')
-    f.writelines(identificador+','+str(round(emotionProbabilities.neutrality, 3))+','+str(round(emotionProbabilities.happiness, 3))+','+str(round(emotionProbabilities.sadness, 3))+','+str(round(emotionProbabilities.anger, 3))+','+str(round(emotionProbabilities.fear, 3))+"\n")
+    f.writelines(identificador+','+str(round(emotionProbabilities.anger, 3))+',0.0,'+str(round(emotionProbabilities.fear, 3))+','+str(round(emotionProbabilities.happiness, 3))+','+str(round(emotionProbabilities.sadness, 3))+',0.0,'+str(round(emotionProbabilities.neutrality, 3))+"\n")
 	#print ("Neutral: %.3f" % emotionProbabilities.neutrality)
 	#print ("Happy: %.3f" % emotionProbabilities.happiness)
 	#print ("Sad: %.3f" % emotionProbabilities.sadness)

@@ -10,7 +10,7 @@ os.mkdir('audios-generados')
 file_name = sys.argv[1]
 time_one = 0
 time_two = 20
-count = 1
+count = 0
 video = mp.VideoFileClip(file_name)
 duration = video.duration
 while time_one < duration:
