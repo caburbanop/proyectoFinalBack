@@ -26,7 +26,7 @@ print ("Analyzed by: %s" % Vokaturi.versionAndLicense())
 
 print ("Reading sound file...")
 file_name = sys.argv[1]
-identificador = sys.argv[2]
+identificador = int(sys.argv[2])
 (sample_rate, samples) = scipy.io.wavfile.read(file_name)
 print ("   sample rate %.3f Hz" % sample_rate)
 
@@ -53,7 +53,10 @@ voice.extract(quality, emotionProbabilities)
 if quality.valid:
     print ("Escribiendo")
     f = open('emociones.txt', 'a')
-    f.writelines(identificador+','+str(round(emotionProbabilities.anger, 3))+',0.0,'+str(round(emotionProbabilities.fear, 3))+','+str(round(emotionProbabilities.happiness, 3))+','+str(round(emotionProbabilities.sadness, 3))+',0.0,'+str(round(emotionProbabilities.neutrality, 3))+"\n")
+    identificadorCopy = identificador
+    while identificador < (identificadorCopy + 5):
+        f.writelines(str(identificador)+','+str(round(emotionProbabilities.anger, 3))+',0.0,'+str(round(emotionProbabilities.fear, 3))+','+str(round(emotionProbabilities.happiness, 3))+','+str(round(emotionProbabilities.sadness, 3))+',0.0,'+str(round(emotionProbabilities.neutrality, 3))+"\n")
+        identificador = identificador + 1
 	#print ("Neutral: %.3f" % emotionProbabilities.neutrality)
 	#print ("Happy: %.3f" % emotionProbabilities.happiness)
 	#print ("Sad: %.3f" % emotionProbabilities.sadness)

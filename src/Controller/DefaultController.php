@@ -66,17 +66,19 @@ class DefaultController extends AbstractController
     function reconocimientoHabla($nombreVideo){
         // Cambiamos de directorio
         if (chdir("/Aplicaciones/projectFinal/public/OpenVokaturi-3-4/examples")) {
-            $comando = "python extraer_audio.py video_nodal.mp4";
+            $comando = "python extraer_audio.py ".$nombreVideo;
             exec($comando, $output, $return_var);
             $ficheros = scandir("audios-generados");
             //sort($ficheros);
             //$dir = opendir("audios-generados");
             unlink("emociones.txt");
+            $identificador = 0;
             foreach ($ficheros as $fichero) {
                 if( $fichero != "." && $fichero != ".."){
-                    $dividir = explode("-", $fichero);
-                    $nombre = explode(".", $dividir[1]);
-                    $comando = "python OpenVokaWavMean-linux64.py audios-generados/".$fichero.' '.$nombre[0].' > /dev/null 2>&1 & echo $!';
+                    //$dividir = explode("-", $fichero);
+                    //$nombre = explode(".", $dividir[1]);
+                    $comando = "python OpenVokaWavMean-linux64.py audios-generados/".$fichero.' '.$identificador.' > /dev/null 2>&1 & echo $!';
+                    $identificador = $identificador + 5;
                     exec($comando, $output1, $return_var);                            
                 }
             }
@@ -195,7 +197,7 @@ class DefaultController extends AbstractController
             $fp = fopen($file, "r");
             $contenido = fread($fp, filesize($file));
             $datosArchivo = explode("\n", $contenido);
-            sort($datosArchivo);
+            sort($datosArchivo, 1);
             $contenido = implode("\n", $datosArchivo);
             return $contenido;
         }
