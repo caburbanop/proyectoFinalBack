@@ -126,7 +126,7 @@ def definirEmocion(video):
                         custom = model.predict(img_pixels)
                         predictions = model.predict(img_pixels) #store probabilities of 7 expressions
                         
-                        print ("predicciones ", predictions)
+                        #print ("predicciones ", predictions)
                         #find max indexed array 0: angry, 1:disgust, 2:fear, 3:happy, 4:sad, 5:surprise, 6:neutral
                         max_index = np.argmax(predictions[0])
                         v_max_index ="{0:.3f}".format( predictions[0,max_index])

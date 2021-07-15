@@ -122,9 +122,10 @@ class DefaultController extends AbstractController
         );
         try {
             $json = $request->request->get('json');
-            $datosEnvio = json_decode($json);
-            $tipo = $datosEnvio->tipo;
-            $proceso = $datosEnvio->proceso;
+            //$datosEnvio = json_decode($json);
+            //$tipo = $datosEnvio->tipo;
+            $tipo = "facial-habla";
+            //$proceso = $datosEnvio->proceso;
             $data['tipo'] = $tipo;
 
             // Obtenemos el arreglo generado
@@ -144,25 +145,31 @@ class DefaultController extends AbstractController
                 $arregloHabla = explode("\n", $contenidoHabla);
                 //unset($arregloHabla[0]);
                 $contenidoFinal = "";
+                //$tamanioHabla = count($arregloHabla);
+                //$tamanioFacial = count($arregloFacial);
 
                 for ($i=0; $i<count($arregloFacial); $i++){
-                    if ($arregloFacial[$i] != "" && $arregloHabla[$i+1] != "") {
-                        $valuesFacial = explode(",", $arregloFacial[$i]);
-                        $copyValuesFacial = $valuesFacial;
-                        $valuesHabla = explode(",", $arregloHabla[$i+1]);
-                        $copyValuesHabla = $valuesHabla;
-                        unset($copyValuesFacial[0]);
-                        unset($copyValuesHabla[0]);
-                        $maximoFacial = max($copyValuesFacial);
-                        $maximoHabla = max($copyValuesHabla);
-
-                        // Validamos el valor mayor
-                        if ($maximoFacial > $maximoHabla){
-                            $contenidoFinal = $contenidoFinal.$arregloFacial[$i]."\n";
-                        } else {
-                            $contenidoFinal = $contenidoFinal.$arregloHabla[$i+1]."\n";
+                    if (count($arregloHabla) > $i+2) {
+                        if ($arregloFacial[$i] != "" && $arregloHabla[$i+1] != "") {
+                            $valuesFacial = explode(",", $arregloFacial[$i]);
+                            $copyValuesFacial = $valuesFacial;
+                            $valuesHabla = explode(",", $arregloHabla[$i+1]);
+                            $copyValuesHabla = $valuesHabla;
+                            unset($copyValuesFacial[0]);
+                            unset($copyValuesHabla[0]);
+                            $maximoFacial = max($copyValuesFacial);
+                            $maximoHabla = max($copyValuesHabla);
+    
+                            // Validamos el valor mayor
+                            if ($maximoFacial > $maximoHabla){
+                                $contenidoFinal = $contenidoFinal.$arregloFacial[$i]."\n";
+                            } else {
+                                $contenidoFinal = $contenidoFinal.$arregloHabla[$i+1]."\n";
+                            }
                         }
-                    }                    
+                    } else {
+                        $contenidoFinal = $contenidoFinal.$arregloFacial[$i]."\n";
+                    }
                 }
                 $data['datos'] = $contenidoFinal;
             }
